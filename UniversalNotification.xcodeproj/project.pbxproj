@@ -7,19 +7,20 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		136A443C2AF1FC1000E86746 /* UniversalNotificationApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136A443B2AF1FC1000E86746 /* UniversalNotificationApp.swift */; };
 		136A443E2AF1FC1000E86746 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136A443D2AF1FC1000E86746 /* ContentView.swift */; };
 		136A44402AF1FC1100E86746 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 136A443F2AF1FC1100E86746 /* Assets.xcassets */; };
 		136A44432AF1FC1100E86746 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 136A44422AF1FC1100E86746 /* Preview Assets.xcassets */; };
+		136A444B2AF1FCEF00E86746 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136A444A2AF1FCEF00E86746 /* main.swift */; };
+		136A444E2AF2E6DF00E86746 /* Atomics in Frameworks */ = {isa = PBXBuildFile; productRef = 136A444D2AF2E6DF00E86746 /* Atomics */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		136A44382AF1FC1000E86746 /* UniversalNotification.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UniversalNotification.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		136A443B2AF1FC1000E86746 /* UniversalNotificationApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UniversalNotificationApp.swift; sourceTree = "<group>"; };
 		136A443D2AF1FC1000E86746 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		136A443F2AF1FC1100E86746 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		136A44422AF1FC1100E86746 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		136A44442AF1FC1100E86746 /* UniversalNotification.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = UniversalNotification.entitlements; sourceTree = "<group>"; };
+		136A444A2AF1FCEF00E86746 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -27,6 +28,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				136A444E2AF2E6DF00E86746 /* Atomics in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -52,11 +54,11 @@
 		136A443A2AF1FC1000E86746 /* UniversalNotification */ = {
 			isa = PBXGroup;
 			children = (
-				136A443B2AF1FC1000E86746 /* UniversalNotificationApp.swift */,
 				136A443D2AF1FC1000E86746 /* ContentView.swift */,
 				136A443F2AF1FC1100E86746 /* Assets.xcassets */,
 				136A44442AF1FC1100E86746 /* UniversalNotification.entitlements */,
 				136A44412AF1FC1100E86746 /* Preview Content */,
+				136A444A2AF1FCEF00E86746 /* main.swift */,
 			);
 			path = UniversalNotification;
 			sourceTree = "<group>";
@@ -85,6 +87,9 @@
 			dependencies = (
 			);
 			name = UniversalNotification;
+			packageProductDependencies = (
+				136A444D2AF2E6DF00E86746 /* Atomics */,
+			);
 			productName = UniversalNotification;
 			productReference = 136A44382AF1FC1000E86746 /* UniversalNotification.app */;
 			productType = "com.apple.product-type.application";
@@ -113,6 +118,9 @@
 				Base,
 			);
 			mainGroup = 136A442F2AF1FC1000E86746;
+			packageReferences = (
+				136A444C2AF2E6DF00E86746 /* XCRemoteSwiftPackageReference "swift-atomics" */,
+			);
 			productRefGroup = 136A44392AF1FC1000E86746 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -140,7 +148,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				136A443E2AF1FC1000E86746 /* ContentView.swift in Sources */,
-				136A443C2AF1FC1000E86746 /* UniversalNotificationApp.swift in Sources */,
+				136A444B2AF1FCEF00E86746 /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -271,6 +279,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = UniversalNotification/UniversalNotification.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -279,6 +288,8 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = UniversalNotification;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -298,6 +309,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = UniversalNotification/UniversalNotification.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -306,6 +318,8 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = UniversalNotification;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -341,6 +355,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		136A444C2AF2E6DF00E86746 /* XCRemoteSwiftPackageReference "swift-atomics" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-atomics.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.2.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		136A444D2AF2E6DF00E86746 /* Atomics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 136A444C2AF2E6DF00E86746 /* XCRemoteSwiftPackageReference "swift-atomics" */;
+			productName = Atomics;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 136A44302AF1FC1000E86746 /* Project object */;
 }
