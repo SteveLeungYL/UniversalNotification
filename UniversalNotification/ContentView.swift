@@ -3,6 +3,13 @@ import SwiftUI
 import AppKit
 import Atomics
 
+fileprivate class customNSWindow: NSWindow {
+    override open func mouseDown(with event: NSEvent) {
+//        print("Mouse Down event. ")
+        MenuBarExtraCompact.shared.closeMainWindow(ignoreCounter: true)
+    }
+}
+
 func runCommand(cmd : String, args : String...) -> (output: [String], error: [String], exitCode: Int32) {
 
     var output : [String] = []
@@ -52,9 +59,7 @@ class MenuBarExtraCompact: NSObject {
     private var statusBar: NSStatusBar!
     private var statusBarItem: NSStatusItem!
     
-    private var notiWindowList: [NSWindow] = [NSWindow]()
-    
-    private var hostingViewController: NSHostingController<AnyView>? = nil
+    private var notiWindowList: [customNSWindow] = [customNSWindow]()
     
     private var fromSoftStr: String = ""
     
@@ -146,8 +151,8 @@ class MenuBarExtraCompact: NSObject {
             let screenFrame = curScreen.visibleFrame
             let screenEdge = curScreen.visibleFrame.origin
             
-            let window: NSWindow = {
-                NSWindow(contentRect: NSRect(x: 0, y: 0, width: 300, height: 40),
+            let window: customNSWindow = {
+                customNSWindow(contentRect: NSRect(x: 0, y: 0, width: 300, height: 40),
                          styleMask: NSWindow.StyleMask.titled,
                          backing: NSWindow.BackingStoreType.buffered,
                          defer: true

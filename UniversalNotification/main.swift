@@ -18,7 +18,7 @@ class NSAppDelegate: NSObject, NSApplicationDelegate {
     private let compact = MenuBarExtraCompact.shared
     
     func applicationDidFinishLaunching(_ notification: Notification) {
-        compact.setup()
+        self.compact.setup()
     }
     
     func applicationDidResignActive(_ notification: Notification) {
