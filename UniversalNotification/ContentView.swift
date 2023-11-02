@@ -111,6 +111,7 @@ class MenuBarExtraCompact: NSObject {
             }
             
             let (allShout, _, _) = runCommand(cmd: "/usr/bin/log", args: "show",
+                                              "--predicate", "(subsystem == \"com.apple.unc\") && (category == \"application\")",
                                                    "--style", "syslog", "--info", "--last", "3s")
             for shout in allShout {
                 if shout.range(of: "Resolved interruption suppression for ") != nil && shout.range(of: "as none") != nil {
