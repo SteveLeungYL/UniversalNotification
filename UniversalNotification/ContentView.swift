@@ -252,6 +252,6 @@ fileprivate extension NSWindow {
         self.isReleasedWhenClosed = false
         self.isOpaque = false
         self.backgroundColor = NSColor.clear
-        self.backgroundColor = NSColor(red: 0, green: 0, blue: 1, alpha: 0.95)
+        self.backgroundColor = NSColor(red: 0, green: 0, blue: 1, alpha: 1.0)
     }
 }
