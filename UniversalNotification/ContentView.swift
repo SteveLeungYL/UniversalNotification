@@ -11,8 +11,8 @@ fileprivate class customNSWindow: NSWindow {
 
 func runCommand(cmd : String, args : String...) -> (output: [String], error: [String], exitCode: Int32) {
 
-    var output : [String] = []
-    var error : [String] = []
+    var outputOut : [String] = []
+    var errorOut : [String] = []
 
     let task = Process()
     task.launchPath = cmd
@@ -23,24 +23,29 @@ func runCommand(cmd : String, args : String...) -> (output: [String], error: [St
     let errpipe = Pipe()
     task.standardError = errpipe
 
-    task.launch()
+    do {
+       try task.run()
+    } catch {
+        print("Capture a runCommand exception. ")
+        return (outputOut, errorOut, -1)
+    }
 
     let outdata = outpipe.fileHandleForReading.readDataToEndOfFile()
     if var string = String(data: outdata, encoding: .utf8) {
         string = string.trimmingCharacters(in: .newlines)
-        output = string.components(separatedBy: "\n")
+        outputOut = string.components(separatedBy: "\n")
     }
 
     let errdata = errpipe.fileHandleForReading.readDataToEndOfFile()
     if var string = String(data: errdata, encoding: .utf8) {
         string = string.trimmingCharacters(in: .newlines)
-        error = string.components(separatedBy: "\n")
+        errorOut = string.components(separatedBy: "\n")
     }
 
     task.waitUntilExit()
     let status = task.terminationStatus
 
-    return (output, error, status)
+    return (outputOut, errorOut, status)
 }
 
 class MenuBarExtraCompact: NSObject {
@@ -107,14 +112,19 @@ class MenuBarExtraCompact: NSObject {
             for shout in allShout {
                 if shout.range(of: "Resolved interruption suppression for ") != nil && shout.range(of: "as none") != nil {
                     var tmp = shout.split(separator: "Resolved interruption suppression for ")[1]
-                    tmp = tmp.split(separator: " ")[0]
+                    var tmpSplit = tmp.split(separator: " ")
+                    if tmpSplit.count < 2 {
+                        print("Error: Found mismatched text from 'Resolved...' and space. ")
+                        continue
+                    }
+                    tmp = tmpSplit[0]
                     
                     let bundleName = String(tmp)
                     let bundleURL = NSWorkspace().urlForApplication(withBundleIdentifier: bundleName)
                     if let bundleURLL = bundleURL {
                         let softName = bundleURLL.absoluteString
                         
-                        let tmpSplit = softName.split(separator: "/")
+                        tmpSplit = softName.split(separator: "/")
                         tmp = tmpSplit[tmpSplit.count-1]
                         tmp = tmp.split(separator: ".")[0]
                         
@@ -123,7 +133,9 @@ class MenuBarExtraCompact: NSObject {
                             self.fromSoftStr = self.fromSoftStr.replacingOccurrences(of: "%20", with: " ")
                         }
                     } else {
-                        
+                        // Cannot find the coresponding app.
+                        print("Get Bundle ID but cannot find App name. ")
+                        self.fromSoftStr = "Unknown App"
                     }
                 }
             }
