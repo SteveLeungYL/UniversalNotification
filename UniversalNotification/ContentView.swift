@@ -43,15 +43,6 @@ func runCommand(cmd : String, args : String...) -> (output: [String], error: [St
     return (output, error, status)
 }
 
-extension NSWindow.StyleMask {
-    static var defaultWindow: NSWindow.StyleMask {
-        var styleMask: NSWindow.StyleMask = .init()
-        styleMask.formUnion(.titled)
-        styleMask.formUnion(.fullSizeContentView)
-        return styleMask
-    }
-}
-
 class MenuBarExtraCompact: NSObject {
     static let shared = MenuBarExtraCompact()
     
@@ -154,8 +145,8 @@ class MenuBarExtraCompact: NSObject {
                 if ignoreCounter {
                     NSApplication.shared.hide(self)
                 }
+                window.close()
             })
-            window.close()
         }
         notiWindowList.removeAll()
         
@@ -168,6 +159,10 @@ class MenuBarExtraCompact: NSObject {
     
     @objc func openMainWindow(fromSoft: String) {
         
+//        if self.windowCounter.load(ordering: .relaxed) > 0 {
+//            self.closeMainWindow(ignoreCounter: true)
+//        }
+        
         windowCounter.wrappingIncrement(by: 1, ordering: .relaxed)
         
         for curScreen in NSScreen.screens {
@@ -176,12 +171,13 @@ class MenuBarExtraCompact: NSObject {
             let screenEdge = curScreen.visibleFrame.origin
             
             let window: customNSWindow = {
-                customNSWindow(contentRect: NSRect(x: 0, y: 0, width: 300, height: 40),
-                         styleMask: NSWindow.StyleMask.titled,
+                customNSWindow(contentRect: NSRect(x: 0, y: 0, width: 400, height: 70),
+                               styleMask: .titled,
                          backing: NSWindow.BackingStoreType.buffered,
                          defer: true
                 )
             }()
+            window.styleMask.insert(.fullSizeContentView)
             window.alphaValue = 0
             
             
@@ -198,24 +194,18 @@ class MenuBarExtraCompact: NSObject {
             
             self.notiWindowList.append(window)
             
-            let cell = NSTableCellView()
-            cell.frame = NSRect(x: 0, y: 0, width: 300, height: 40)
-            let tf = NSTextField()
-            tf.frame = cell.frame
-            tf.font = NSFont(name: tf.font!.fontName, size: 30)
-            tf.stringValue = fromSoft
-            tf.alignment = .center
-            tf.isEditable = false
-
-            let stringHeight: CGFloat = tf.attributedStringValue.size().height
-            let frame = tf.frame
-            var titleRect:  NSRect = tf.cell!.titleRect(forBounds: frame)
-
-            titleRect.size.height = stringHeight + ( stringHeight - (tf.font!.ascender + tf.font!.descender ) )
-            titleRect.origin.y = frame.size.height / 2  - tf.lastBaselineOffsetFromBottom - tf.font!.xHeight / 2
-            tf.frame = titleRect
-            window.contentView?.addSubview(tf)
+//            let blurView = NSVisualEffectView()
+//            blurView.blendingMode = .behindWindow
+//            blurView.layer?.cornerRadius = 8
+//            blurView.state = .active
+//            blurView.material = .contentBackground
+//            blurView.clipsToBounds = true;
+//            window.contentView = blurView
             
+            let uiView = NSHostingView(rootView: NotificationView(appName: fromSoft))
+            uiView.setFrameSize(NSSize(width: window.frame.width, height: window.frame.height))
+            window.contentView?.addSubview(uiView)
+//            
             window.configure()
             window.orderFront(nil)
             
@@ -241,8 +231,9 @@ fileprivate extension NSWindow {
         self.titleVisibility = .hidden
         self.collectionBehavior = [.transient, .ignoresCycle, .canJoinAllApplications, .canJoinAllSpaces]
         self.isReleasedWhenClosed = false
-        self.isOpaque = false
-        self.backgroundColor = NSColor.clear
-        self.backgroundColor = NSColor(red: 0, green: 0, blue: 1, alpha: 0.95)
+        self.isOpaque = true
+//        self.backgroundColor = NSColor.clear
+//        self.backgroundColor = NSColor(red: 0, green: 0, blue: 1, alpha: 0.95)
+//        self.contentView?.layer?.backgroundColor = .clear
     }
 }
