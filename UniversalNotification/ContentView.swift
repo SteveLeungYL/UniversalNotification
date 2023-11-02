@@ -88,14 +88,13 @@ class MenuBarExtraCompact: NSObject {
         self.fromSoftStr = ""
         while true {
             let (allShout, _, _) = runCommand(cmd: "/usr/bin/log", args: "show",
-//                                                     "--predicate", "'(subsystem == \"com.apple.unc\") && (category == \"application\")'",
-                                                     "--style", "syslog", "--info", "--last", "3s")
-//            print(stderr)
+                                                   "--style", "syslog", "--info", "--last", "3s")
             for shout in allShout {
-                if shout.range(of: "Presenting <NotificationRecord app:\"") != nil {
-                    var tmp = shout.split(separator: "NotificationRecord app:\"")[1]
-                    tmp = tmp.split(separator: "\"")[0]
-                    tmp = tmp.split(separator: ".")[2]
+                if shout.range(of: "Resolved interruption suppression for ") != nil && shout.range(of: "as none") != nil {
+                    var tmp = shout.split(separator: "Resolved interruption suppression for ")[1]
+                    tmp = tmp.split(separator: " ")[0]
+                    let tmpSplit = tmp.split(separator: ".")
+                    tmp = tmpSplit[tmpSplit.count-1]
                     if tmp != "" {
                         self.fromSoftStr = String(tmp)
                     }
