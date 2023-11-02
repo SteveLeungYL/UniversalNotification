@@ -43,15 +43,6 @@ func runCommand(cmd : String, args : String...) -> (output: [String], error: [St
     return (output, error, status)
 }
 
-extension NSWindow.StyleMask {
-    static var defaultWindow: NSWindow.StyleMask {
-        var styleMask: NSWindow.StyleMask = .init()
-        styleMask.formUnion(.titled)
-        styleMask.formUnion(.fullSizeContentView)
-        return styleMask
-    }
-}
-
 class MenuBarExtraCompact: NSObject {
     static let shared = MenuBarExtraCompact()
     
@@ -154,8 +145,8 @@ class MenuBarExtraCompact: NSObject {
                 if ignoreCounter {
                     NSApplication.shared.hide(self)
                 }
+                window.close()
             })
-            window.close()
         }
         notiWindowList.removeAll()
         
@@ -177,11 +168,12 @@ class MenuBarExtraCompact: NSObject {
             
             let window: customNSWindow = {
                 customNSWindow(contentRect: NSRect(x: 0, y: 0, width: 300, height: 40),
-                         styleMask: NSWindow.StyleMask.titled,
+                               styleMask: NSWindow.StyleMask.titled,
                          backing: NSWindow.BackingStoreType.buffered,
                          defer: true
                 )
             }()
+//            window.styleMask.insert(NSWindow.StyleMask.fullSizeContentView)
             window.alphaValue = 0
             
             
@@ -199,13 +191,18 @@ class MenuBarExtraCompact: NSObject {
             self.notiWindowList.append(window)
             
             let cell = NSTableCellView()
-            cell.frame = NSRect(x: 0, y: 0, width: 300, height: 40)
+            cell.frame = NSRect(x: 0, y: 0, width: window.frame.width, height: window.frame.height-35)
+            cell.enclosingScrollView?.borderType = .noBorder
+            cell.textField?.isHighlighted = false
+            cell.imageView?.isHighlighted = false
             let tf = NSTextField()
             tf.frame = cell.frame
             tf.font = NSFont(name: tf.font!.fontName, size: 30)
             tf.stringValue = fromSoft
             tf.alignment = .center
             tf.isEditable = false
+            tf.isBordered = false
+            tf.backgroundColor = .clear
 
             let stringHeight: CGFloat = tf.attributedStringValue.size().height
             let frame = tf.frame
