@@ -155,6 +155,7 @@ class MenuBarExtraCompact: NSObject {
                     NSApplication.shared.hide(self)
                 }
             })
+            window.close()
         }
         notiWindowList.removeAll()
         
