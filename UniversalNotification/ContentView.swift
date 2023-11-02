@@ -5,7 +5,6 @@ import Atomics
 
 fileprivate class customNSWindow: NSWindow {
     override open func mouseDown(with event: NSEvent) {
-//        print("Mouse Down event. ")
         MenuBarExtraCompact.shared.closeMainWindow(ignoreCounter: true)
     }
 }
@@ -65,6 +64,8 @@ class MenuBarExtraCompact: NSObject {
     
     private let windowCounter = ManagedAtomic<Int>(0)
     
+    private var isMultiScreens = false
+    
     func setup() {
         statusBar = NSStatusBar.system
         statusBarItem = statusBar.statusItem(withLength: NSStatusItem.squareLength)
@@ -78,6 +79,8 @@ class MenuBarExtraCompact: NSObject {
         Bundle.main.loadNibNamed("MainMenu", owner: self, topLevelObjects: nil)
         NSApplication.shared.setActivationPolicy(.accessory)
         
+        self.openMainWindow(fromSoft: "Launched")
+        
         DispatchQueue.global(qos: .background).async {
             self.notificationLoopFunction()
         }
@@ -85,8 +88,28 @@ class MenuBarExtraCompact: NSObject {
     }
     
     func notificationLoopFunction() {
+        
         self.fromSoftStr = ""
         while true {
+            if NSScreen.screens.count <= 1 {
+                if isMultiScreens == true {
+                    isMultiScreens = false
+                    DispatchQueue.main.sync(execute: {
+                        self.openMainWindow(fromSoft: "Turn OFF")
+                    })
+                }
+                sleep(10)
+                continue
+            } else {
+                // > 1
+                if isMultiScreens == false {
+                    isMultiScreens = true
+                    DispatchQueue.main.sync(execute: {
+                        self.openMainWindow(fromSoft: "Turn ON")
+                    })
+                }
+            }
+            
             let (allShout, _, _) = runCommand(cmd: "/usr/bin/log", args: "show",
                                                    "--style", "syslog", "--info", "--last", "3s")
             for shout in allShout {
