@@ -108,10 +108,22 @@ class MenuBarExtraCompact: NSObject {
                 if shout.range(of: "Resolved interruption suppression for ") != nil && shout.range(of: "as none") != nil {
                     var tmp = shout.split(separator: "Resolved interruption suppression for ")[1]
                     tmp = tmp.split(separator: " ")[0]
-                    let tmpSplit = tmp.split(separator: ".")
-                    tmp = tmpSplit[tmpSplit.count-1]
-                    if tmp != "" {
-                        self.fromSoftStr = String(tmp)
+                    
+                    let bundleName = String(tmp)
+                    let bundleURL = NSWorkspace().urlForApplication(withBundleIdentifier: bundleName)
+                    if let bundleURLL = bundleURL {
+                        let softName = bundleURLL.absoluteString
+                        
+                        let tmpSplit = softName.split(separator: "/")
+                        tmp = tmpSplit[tmpSplit.count-1]
+                        tmp = tmp.split(separator: ".")[0]
+                        
+                        if tmp != "" {
+                            self.fromSoftStr = String(tmp)
+                            self.fromSoftStr = self.fromSoftStr.replacingOccurrences(of: "%20", with: " ")
+                        }
+                    } else {
+                        
                     }
                 }
             }
