@@ -5,11 +5,11 @@ import Atomics
 
 fileprivate class customNSWindow: NSWindow {
     override open func mouseDown(with event: NSEvent) {
-        MenuBarExtraCompact.shared.closeMainWindow(ignoreCounter: true)
+        UniversalNotificationMenuBarExtra.shared.hideAllNotificationWindow(ignoreCounter: true)
     }
 }
 
-func runCommand(cmd : String, args : String...) -> (output: [String], error: [String], exitCode: Int32) {
+func runSpawnedCommand(cmd : String, args : String...) -> (output: [String], error: [String], exitCode: Int32) {
 
     var outputOut : [String] = []
     var errorOut : [String] = []
@@ -26,7 +26,7 @@ func runCommand(cmd : String, args : String...) -> (output: [String], error: [St
     do {
        try task.run()
     } catch {
-        print("Capture a runCommand exception. \(error)")
+//        print("Capture a runCommand exception. \(error)")
         task.waitUntilExit()
         try! outpipe.fileHandleForReading.close()
         try! errpipe.fileHandleForReading.close()
@@ -54,25 +54,28 @@ func runCommand(cmd : String, args : String...) -> (output: [String], error: [St
     return (outputOut, errorOut, status)
 }
 
-class MenuBarExtraCompact: NSObject {
-    static let shared = MenuBarExtraCompact()
+class UniversalNotificationMenuBarExtra: NSObject {
+    static let shared = UniversalNotificationMenuBarExtra()
     
     private var statusBar: NSStatusBar!
     private var statusBarItem: NSStatusItem!
     
-    private var notiWindowList: [customNSWindow] = [customNSWindow]()
+    private var notificationWindowList: [customNSWindow] = [customNSWindow]()
+    private var allScreenList: [CGPoint] = [CGPoint]()
+    private var allTextField: [NSTextField] = [NSTextField]()
     
     private var fromSoftStr: String = ""
     
-    private let windowCounter = ManagedAtomic<Int>(0)
+    private let windowInvokeCounter = ManagedAtomic<Int>(0)
     
-    private var isMultiScreens = false
+    private var isMultiScreens = -1 // -1: init, 0: single, 1: multiple
     
-    func setup() {
+    func initSetup() {
         statusBar = NSStatusBar.system
         statusBarItem = statusBar.statusItem(withLength: NSStatusItem.squareLength)
         
         if let button = statusBarItem.button {
+            // TODO: Use a new icon.
             button.image = (NSImage(systemSymbolName: "rectangle.and.pencil.and.ellipsis", accessibilityDescription: nil))
             button.target = self
             button.action = #selector(exitApplication)
@@ -81,40 +84,47 @@ class MenuBarExtraCompact: NSObject {
         Bundle.main.loadNibNamed("MainMenu", owner: self, topLevelObjects: nil)
         NSApplication.shared.setActivationPolicy(.accessory)
         
-        self.openMainWindow(fromSoft: "Launched")
-        
         DispatchQueue.global(qos: .background).async {
-            self.notificationLoopFunction()
+            self.notificationMainLoop()
         }
         
     }
     
-    func notificationLoopFunction() {
+    func notificationMainLoop() {
         
-        self.fromSoftStr = ""
         while true {
             if NSScreen.screens.count <= 1 {
-                if isMultiScreens == true {
-                    isMultiScreens = false
+                if isMultiScreens == -1 || isMultiScreens == 1 {
+                    isMultiScreens = 0 // single
+                    
                     DispatchQueue.main.sync(execute: {
-                        self.openMainWindow(fromSoft: "Turn OFF")
+                        closeAllNotificationWindow()
+                        //                        openNewWindow(fromSoft: "Updated Screen")
+                        self.openNewNotificationWindow(fromSoft: "Turn OFF")
                     })
                 }
-                sleep(10)
+                _ = DispatchQueue.global().sync(execute: {
+                    sleep(10)
+                })
                 continue
             } else {
                 // > 1
-                if isMultiScreens == false {
-                    isMultiScreens = true
-                    DispatchQueue.main.sync(execute: {
-                        self.openMainWindow(fromSoft: "Turn ON")
-                    })
+                if isMultiScreens == -1 || isMultiScreens == 0 {
+                    isMultiScreens = 1 // multiple screens
                 }
             }
             
-            let (allShout, _, _) = runCommand(cmd: "/usr/bin/log", args: "show",
+            if !checkScreenConfig() {
+                DispatchQueue.main.sync(execute: {
+                    closeAllNotificationWindow()
+                    openNewNotificationWindow(fromSoft: "Updated Screen")
+                })
+            }
+            
+            
+            let (allShout, _, _) = runSpawnedCommand(cmd: "/usr/bin/log", args: "show",
                                               "--predicate", "(subsystem == \"com.apple.unc\") && (category == \"application\")",
-                                                   "--style", "syslog", "--info", "--last", "3s")
+                                              "--style", "syslog", "--info", "--last", "3s")
             for shout in allShout {
                 if shout.range(of: "Resolved interruption suppression for ") != nil && shout.range(of: "as none") != nil {
                     var tmp = shout.split(separator: "Resolved interruption suppression for ")[1]
@@ -136,65 +146,129 @@ class MenuBarExtraCompact: NSObject {
                         
                         if tmp != "" {
                             self.fromSoftStr = String(tmp)
-                            self.fromSoftStr = self.fromSoftStr.replacingOccurrences(of: "%20", with: " ")
+                            self.fromSoftStr = fromSoftStr.replacingOccurrences(of: "%20", with: " ")
                         }
                     } else {
                         // Cannot find the coresponding app.
-                        print("Get Bundle ID but cannot find App name. ")
+                        //                            print("Get Bundle ID but cannot find App name. ")
                         self.fromSoftStr = "Unknown App"
                     }
+                    tmp.removeAll(keepingCapacity: false)
+                    tmpSplit.removeAll(keepingCapacity: false)
                 }
             }
             
             if self.fromSoftStr != "" {
+                //                    print("Capture new fromSoftStr: \(fromSoftStr)")
                 DispatchQueue.main.sync(execute: {
-                    self.openMainWindow(fromSoft: self.fromSoftStr)
+                    self.showAllNotificationWindow(fromSoft: fromSoftStr)
                 })
             }
             self.fromSoftStr = ""
+            
             sleep(2)
         }
     }
     
-    @objc func exitApplication() {
-        exit(0)
+
+    
+    func checkScreenConfig() -> Bool {
+        var idx = 0
+        for curScreen in NSScreen.screens {
+            if idx >= self.allScreenList.count ||
+                curScreen.visibleFrame.origin.x != self.allScreenList[idx].x ||
+                curScreen.visibleFrame.origin.y != self.allScreenList[idx].y {
+                return false
+            }
+            idx += 1
+        }
+        
+        return true
     }
     
-    @objc func closeMainWindow(ignoreCounter: Bool) {
+    func hideAllNotificationWindow(ignoreCounter: Bool) {
+//        print("Call hideAllWindow")
         
-        if !ignoreCounter && self.windowCounter.load(ordering: .relaxed) > 1 {
-            windowCounter.wrappingDecrement(by: 1, ordering: .relaxed)
+        if !ignoreCounter && self.windowInvokeCounter.load(ordering: .relaxed) > 1 {
+            windowInvokeCounter.wrappingDecrement(by: 1, ordering: .relaxed)
             return
         }
         
-        for window in self.notiWindowList {
+        for window in self.notificationWindowList {
             NSAnimationContext.runAnimationGroup({ (context) -> Void in
                 context.duration = 0.5
                 window.animator().alphaValue = 0
             }, completionHandler: {
-                if ignoreCounter {
-                    NSApplication.shared.hide(self)
-                }
-                window.close()
+                NSApplication.shared.hide(self)
             })
         }
-        notiWindowList.removeAll()
         
         if !ignoreCounter {
-            windowCounter.wrappingDecrement(by: 1, ordering: .relaxed)
+            windowInvokeCounter.wrappingDecrement(by: 1, ordering: .relaxed)
         }
         
         return
     }
     
-    @objc func openMainWindow(fromSoft: String) {
+    func showAllNotificationWindow(fromSoft: String) {
+        windowInvokeCounter.wrappingIncrement(by: 1, ordering: .relaxed)
+//        print("showAllWindow")
         
-        windowCounter.wrappingIncrement(by: 1, ordering: .relaxed)
+        for tf in self.allTextField {
+            NSAnimationContext.runAnimationGroup({ (context) -> Void in
+                context.duration = 0.3
+                tf.stringValue = fromSoft
+                // asks the text view to redraw
+                tf.needsDisplay = true
+                // asks for relayout
+                tf.needsLayout = true
+            }, completionHandler: {
+            })
+        }
+        
+        for window in self.notificationWindowList {
+            window.orderFront(nil)
+        }
+        for window in self.notificationWindowList {
+            NSAnimationContext.runAnimationGroup({ (context) -> Void in
+                context.duration = 0.5
+                window.animator().alphaValue = 1
+            }, completionHandler: {
+            })
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 8) {
+            self.hideAllNotificationWindow(ignoreCounter: false)
+        }
+        
+        return
+    }
+    
+    func closeAllNotificationWindow() {
+        
+        for window in self.notificationWindowList {
+            NSApplication.shared.hide(self)
+            window.close()
+        }
+        notificationWindowList.removeAll()
+        allScreenList.removeAll()
+        allTextField.removeAll()
+        
+        windowInvokeCounter.store(0, ordering: .relaxed)
+        
+        return
+    }
+    
+    func openNewNotificationWindow(fromSoft: String) {
+        
+        windowInvokeCounter.wrappingIncrement(by: 1, ordering: .relaxed)
         
         for curScreen in NSScreen.screens {
             
             let screenFrame = curScreen.visibleFrame
             let screenEdge = curScreen.visibleFrame.origin
+            
+            allScreenList.append(screenEdge)
             
             let window: customNSWindow = {
                 customNSWindow(contentRect: NSRect(x: 0, y: 0, width: 300, height: 40),
@@ -218,7 +292,7 @@ class MenuBarExtraCompact: NSObject {
             
             window.setFrameTopLeftPoint(windowTopLeftPosition)
             
-            self.notiWindowList.append(window)
+            self.notificationWindowList.append(window)
             
             let cell = NSTableCellView()
             cell.frame = NSRect(x: 0, y: 0, width: window.frame.width, height: window.frame.height-35)
@@ -233,6 +307,8 @@ class MenuBarExtraCompact: NSObject {
             tf.isEditable = false
             tf.isBordered = false
             tf.backgroundColor = .clear
+            
+            allTextField.append(tf)
 
             let stringHeight: CGFloat = tf.attributedStringValue.size().height
             let frame = tf.frame
@@ -243,7 +319,7 @@ class MenuBarExtraCompact: NSObject {
             tf.frame = titleRect
             window.contentView?.addSubview(tf)
             
-            window.configure()
+            window.windowStyleConfigure()
             window.orderFront(nil)
             
             NSAnimationContext.runAnimationGroup({ (context) -> Void in
@@ -255,15 +331,19 @@ class MenuBarExtraCompact: NSObject {
         }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 8) {
-            self.closeMainWindow(ignoreCounter: false)
+            self.hideAllNotificationWindow(ignoreCounter: false)
         }
         
+    }
+    
+    @objc func exitApplication() {
+        exit(0)
     }
     
 }
 
 fileprivate extension NSWindow {
-    func configure() {
+    func windowStyleConfigure() {
         self.titlebarAppearsTransparent = true
         self.titleVisibility = .hidden
         self.collectionBehavior = [.transient, .ignoresCycle, .canJoinAllApplications, .canJoinAllSpaces]

@@ -15,10 +15,10 @@ app.delegate = appDelegate
 app.run()
 
 class NSAppDelegate: NSObject, NSApplicationDelegate {
-    private let compact = MenuBarExtraCompact.shared
+    private let compact = UniversalNotificationMenuBarExtra.shared
     
     func applicationDidFinishLaunching(_ notification: Notification) {
-        self.compact.setup()
+        self.compact.initSetup()
     }
     
     func applicationDidResignActive(_ notification: Notification) {
