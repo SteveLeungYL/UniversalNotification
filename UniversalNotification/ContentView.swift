@@ -103,7 +103,7 @@ class UniversalNotificationMenuBarExtra: NSObject {
                         self.openNewNotificationWindow(fromSoft: "Turn OFF")
                     })
                 }
-                _ = DispatchQueue.global().sync(execute: {
+                _ = DispatchQueue.main.sync(execute: {
                     sleep(10)
                 })
                 continue
@@ -260,6 +260,7 @@ class UniversalNotificationMenuBarExtra: NSObject {
     }
     
     func openNewNotificationWindow(fromSoft: String) {
+        // TODO: Very Ugly UI.
         
         windowInvokeCounter.wrappingIncrement(by: 1, ordering: .relaxed)
         
@@ -300,6 +301,7 @@ class UniversalNotificationMenuBarExtra: NSObject {
             cell.textField?.isHighlighted = false
             cell.imageView?.isHighlighted = false
             let tf = NSTextField()
+            tf.textColor = .white // TODO:: Dark Mode Support.
             tf.frame = cell.frame
             tf.font = NSFont(name: tf.font!.fontName, size: 30)
             tf.stringValue = fromSoft
