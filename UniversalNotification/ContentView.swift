@@ -103,7 +103,7 @@ class UniversalNotificationMenuBarExtra: NSObject {
                         self.openNewNotificationWindow(fromSoft: "Turn OFF")
                     })
                 }
-                _ = DispatchQueue.main.sync(execute: {
+                _ = DispatchQueue.global().sync(execute: {
                     sleep(10)
                 })
                 continue
