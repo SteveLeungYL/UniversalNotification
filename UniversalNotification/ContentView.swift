@@ -26,7 +26,10 @@ func runCommand(cmd : String, args : String...) -> (output: [String], error: [St
     do {
        try task.run()
     } catch {
-        print("Capture a runCommand exception. ")
+        print("Capture a runCommand exception. \(error)")
+        task.waitUntilExit()
+        try! outpipe.fileHandleForReading.close()
+        try! errpipe.fileHandleForReading.close()
         return (outputOut, errorOut, -1)
     }
 
@@ -44,6 +47,9 @@ func runCommand(cmd : String, args : String...) -> (output: [String], error: [St
 
     task.waitUntilExit()
     let status = task.terminationStatus
+    
+    try! outpipe.fileHandleForReading.close()
+    try! errpipe.fileHandleForReading.close()
 
     return (outputOut, errorOut, status)
 }
